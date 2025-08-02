@@ -1,0 +1,13 @@
+[project]
+name = "linkedai"
+version = "0.1.0"
+description = "AI tool for job hunting using LLMs and LinkedIn"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4",
+    "httpx",
+    "PyYAML",
+    "pydantic",
+    "ipykernel",
+]
