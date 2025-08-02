@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4",
     "httpx",
-    "PyYAML",
+    "playwright",
     "pydantic",
     "ipykernel",
 ]
