@@ -1,3 +1,4 @@
+import argparse
 import json
 
 from bs4 import BeautifulSoup
@@ -173,10 +174,22 @@ def scrape_linkedin_jobs(config: Config) -> list[JobCard]:
 
 if __name__ == "__main__":
 
-    config = load_config("./linkedAI/scraper/config_example.json")
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--configPath",
+        type=str,
+        help="Path to JSON config file containing keywords and filters",
+    )
+    parser.add_argument(
+        "--output", type=str, help="Path to JSON output file for scraped jobs"
+    )
+    args = parser.parse_args()
+
+    config = load_config(args.configPath)
 
     jobs = scrape_linkedin_jobs(config)
 
     # dump results into a json file for now
-    with open("scraped_jobs_10.json", "w", encoding="utf-8") as f:
+    with open(args.output, "w", encoding="utf-8") as f:
         json.dump([job.model_dump() for job in jobs], f, indent=2)
