@@ -7,12 +7,36 @@ from urllib.parse import urlencode, quote_plus
 
 
 def load_config(file_path: str) -> Config:
+    """Load JSON config file containing keywords and filters for job search
+
+    Args:
+        file_path: str
+            Path to JSON config file
+
+    Returns:
+        config: Config
+            Config object containing keywords and filters for job search
+    """
+
     with open(file_path, "r") as file:
         config_data = json.load(file)
     return Config(**config_data)
 
 
-def build_search_url(config: Config, start=0):
+def build_search_url(config: Config, start=0) -> str:
+    """Contructs the LinkedIn search URL based on the provided config
+
+    Args:
+        config: Config
+            config object containing keywords and filters for job search
+        start: int = 0
+            determines start page when searching LinkedIn for job results
+
+    Returns:
+        url: str
+            full search url with all keywords and filters
+    """
+
     base_url = "https://www.linkedin.com/jobs/search"
     query = {
         "keywords": config.keywords,
@@ -31,7 +55,18 @@ def build_search_url(config: Config, start=0):
     return base_url + "?" + urlencode(query, quote_via=quote_plus)
 
 
-def scrape_job_links_from_search_page(page_html: str):
+def scrape_job_links_from_search_page(page_html: str) -> list[str]:
+    """Extracts job link for each job
+
+    Args:
+        page_html: str
+            Scraped HTML for a given job search
+
+    Returns:
+        job_links: list[str]
+            Unique list of individual job links
+    """
+
     soup = BeautifulSoup(page_html, "html.parser")
     job_links = []
 
@@ -43,7 +78,18 @@ def scrape_job_links_from_search_page(page_html: str):
     return list(set(job_links))
 
 
-def scrape_job_details(url: str):
+def scrape_job_details(url: str) -> JobCard:
+    """Scrape job details and return a JobCard with all relevant info
+
+    Args:
+        url: str
+            URL for each individual job
+
+    Returns:
+        job_card: JobCard
+            JobCard object containing job info
+    """
+
     with sync_playwright() as sp:
         browser = sp.chromium.launch(headless=True)
         page = browser.new_page()
@@ -91,6 +137,16 @@ def scrape_job_details(url: str):
 
 
 def scrape_linkedin_jobs(config: Config) -> list[JobCard]:
+    """Function which builds the search URL, scrapes jobs and extracts info
+    Args:
+        config: Config
+            Config object containing keywords and filters for job search
+
+    Returns:
+        results: list[JobCard]
+            List of job cards with relevant info for each job
+    """
+
     url = build_search_url(config)
 
     with sync_playwright() as p:
@@ -115,15 +171,12 @@ def scrape_linkedin_jobs(config: Config) -> list[JobCard]:
     return results
 
 
-def main():
+if __name__ == "__main__":
+
     config = load_config("./linkedAI/scraper/config_example.json")
 
     jobs = scrape_linkedin_jobs(config)
 
+    # dump results into a json file for now
     with open("scraped_jobs_10.json", "w", encoding="utf-8") as f:
         json.dump([job.model_dump() for job in jobs], f, indent=2)
-
-
-if __name__ == "__main__":
-
-    main()

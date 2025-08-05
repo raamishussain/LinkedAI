@@ -12,10 +12,13 @@ load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+
 def init_logging():
+    """Initialize logging for the sript"""
+
     root = logging.getLogger()
     root.setLevel(logging.INFO)
-    
+
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.INFO)
     formatter = logging.Formatter(
@@ -27,6 +30,18 @@ def init_logging():
 
 
 def parse_job_json(json_path: str) -> tuple[dict[str], list[str], list[str]]:
+    """Take JSON file of scraped jobs and extract metadata, job ids and
+    job descriptions
+
+    Args:
+        json_path: str
+            Path to JSON file containing scraped jobs
+
+    Returns:
+        (metadatas, ids, descriptions): tuple
+            tuple of metadatas, ids, and descriptions
+    """
+
     with open(json_path, "r") as f:
         jobs_json = json.load(f)
 
@@ -44,9 +59,7 @@ def parse_job_json(json_path: str) -> tuple[dict[str], list[str], list[str]]:
         metadatas.append(metadata)
 
         # get job id from end of job link
-        ids.append(
-            job["link"].split("-")[-1]
-        )
+        ids.append(job["link"].split("-")[-1])
 
         descriptions.append(job["description"])
 
@@ -55,11 +68,26 @@ def parse_job_json(json_path: str) -> tuple[dict[str], list[str], list[str]]:
 
 def vectorize(
     metadatas: dict[str],
-    ids: list[str], 
+    ids: list[str],
     descriptions: list[str],
     chroma_path: str,
     collection_name: str,
 ):
+    """Function to create vector embeddings of job data and add them to
+    ChromaDB collection
+
+    Args:
+        metadatas: dict[str]
+            Dictionary of metadata values for each job.
+        ids: list[str]
+            List of JobIDs which will also be partition key for ChromaDB
+        descriptions: list[str]
+            List of job descriptions
+        chroma_path: str
+            Path to ChromaDB if it exists, otherwise path to create new DB
+        collection_name: str
+            Name of collection in ChromaDB
+    """
 
     chroma_client = chromadb.PersistentClient(path=chroma_path)
     collection = chroma_client.get_or_create_collection(collection_name)
@@ -92,24 +120,21 @@ def vectorize(
     )
     logging.info("Successfully vectorized jobs!")
 
+
 if __name__ == "__main__":
-  
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--json",
-        type=str,
-        help="Path to json file containing scraped jobs"
+        "--json", type=str, help="Path to json file containing scraped jobs"
     )
     parser.add_argument(
         "--collection",
         type=str,
-        help="Name of ChromaDB collection to store vector embeddings"
+        help="Name of ChromaDB collection to store vector embeddings",
     )
     parser.add_argument(
-        "--chromaPath",
-        type=str,
-        help="Path to save ChromaDB data"
+        "--chromaPath", type=str, help="Path to save ChromaDB data"
     )
     args = parser.parse_args()
 
