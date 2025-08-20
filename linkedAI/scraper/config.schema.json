@@ -1,0 +1,88 @@
+{
+  "$defs": {
+    "ExperienceLevel": {
+      "enum": [
+        "entry_level",
+        "associate",
+        "mid_senior",
+        "director",
+        "executive"
+      ],
+      "title": "ExperienceLevel",
+      "type": "string"
+    },
+    "Salary": {
+      "enum": [
+        "100k",
+        "120k",
+        "140k",
+        "160k",
+        "180k",
+        "200k"
+      ],
+      "title": "Salary",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "keywords": {
+      "description": "Keywords to search for jobs, just as you would type them in the LinkedIn search bar",
+      "title": "Keywords",
+      "type": "string"
+    },
+    "location": {
+      "default": "United States",
+      "title": "Location",
+      "type": "string"
+    },
+    "time_since_post": {
+      "default": null,
+      "description": "Time since post in seconds, must be between 1 and 2592000 (30 days)",
+      "exclusiveMinimum": 1,
+      "maximum": 2592000,
+      "title": "Time Since Post",
+      "type": "integer"
+    },
+    "remote": {
+      "default": false,
+      "title": "Remote",
+      "type": "boolean"
+    },
+    "max_results": {
+      "default": 10,
+      "title": "Max Results",
+      "type": "integer"
+    },
+    "experience_levels": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ExperienceLevel"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Experience Levels"
+    },
+    "salary": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Salary"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "keywords"
+  ],
+  "title": "Config",
+  "type": "object"
+}
