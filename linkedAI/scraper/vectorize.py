@@ -3,14 +3,9 @@ import chromadb
 import json
 import logging
 import sys
-import os
 
-from dotenv import load_dotenv
+from linkedAI.config import OPENAI_API_KEY
 from openai import OpenAI
-
-load_dotenv()
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
 def init_logging():
