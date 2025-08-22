@@ -1,10 +1,11 @@
 from linkedAI.config import CHAT_AGENT_SYSTEM_PROMPT
+from linkedAI.scraper.data_models import JobCard
 from pydantic import BaseModel, Field
-from typing import Annotated, Literal, Union
+from typing import Any, Annotated, Literal, Optional, Union
 
 
 class SystemMessage(BaseModel):
-    role: Literal["user"]
+    role: Literal["system"]
     content: str
 
 
@@ -14,7 +15,7 @@ class AssistantMessage(BaseModel):
 
 
 class UserMessage(BaseModel):
-    role: Literal["system"]
+    role: Literal["user"]
     content: str
 
 
@@ -36,3 +37,17 @@ class ChatHistory(BaseModel):
     def append_message(self, message: OpenAIMessage):
         """Append a new message to the chat history"""
         self.messages.append(message)
+
+
+class QueryArgs(BaseModel):
+    """Arguments for querying the vector database (used in tool call)"""
+
+    query: str
+    n_results: int
+    filters: Optional[dict[str, Any]]
+
+
+class SearchResults(BaseModel):
+    """Class containing list of jobs from querying the DB"""
+
+    jobs: list[JobCard]

@@ -1,7 +1,9 @@
 from chromadb.api.models.Collection import Collection
-from linkedAI.agents.agent import Agent
+from linkedAI.agents import Agent, QueryArgs, SearchResults
 from linkedAI.config import EMBEDDING_MODEL, OPENAI_API_KEY
+from linkedAI.scraper.data_models import JobCard
 from openai import OpenAI
+from typing import Any
 
 
 class QueryAgent(Agent):
@@ -15,39 +17,49 @@ class QueryAgent(Agent):
         self.embedding_model = EMBEDDING_MODEL
         self.log("Successfully initialized QueryAgent")
 
-    def query_vectorstore(
-        self,
-        client: OpenAI,
-        collection: Collection,
-        query: str,
-        n_results: int = 1,
-    ) -> dict:
+    def query_vectorstore(self, query_args: QueryArgs) -> SearchResults:
         """Query the vectorstore for relevant jobs
 
         Args:
-            client: OpenAI
-                OpenAI client
-            collection: Collection
-                ChromaDB collection where job vector embeddings are stored
-            query: str
-                user query for job
-            n_results: int
-                Number of jobs to retreive based on highest similarity
+            query_args: QueryArgs
+                arguments needed to query the vector DB
 
         Returns:
-            results: dict
-                dictionary of results with n_results number of jobs
+            results: SearchResults
+                List of Job objects returned by the search
         """
 
-        response = client.embeddings.create(
+        response = self.client.embeddings.create(
             model=self.embedding_model,
-            input=query,
+            input=query_args.query,
         )
 
-        results = collection.query(
+        results = self.collection.query(
             query_embeddings=response.data[0].embedding,
-            n_results=n_results,
+            n_results=query_args.n_results,
             include=["documents", "metadatas"],
+            where=query_args.filters or {},
         )
 
-        return results
+        jobs = []
+        for i in range(len(results["documents"])):
+            jobs.append(
+                JobCard(
+                    description=results["documents"][0][i],
+                    **results["metadatas"][0][i]
+                )
+            )
+
+        return jobs
+
+    @staticmethod
+    def tool_schema() -> dict[str, Any]:
+        """Return tool schema for OpenAI function calling."""
+        return {
+            "type": "function",
+            "function": {
+                "name": "search_jobs",
+                "description": "Query the Jobs database for jobs matching the user's query",  # noqa: E501
+                "parameters": QueryArgs.model_json_schema(),
+            },
+        }
