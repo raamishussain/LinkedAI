@@ -11,7 +11,8 @@ class SystemMessage(BaseModel):
 
 class AssistantMessage(BaseModel):
     role: Literal["assistant"]
-    content = str
+    content: str = ""
+    tool_calls: Optional[list[dict[str, Any]]] = None
 
 
 class UserMessage(BaseModel):
@@ -19,20 +20,46 @@ class UserMessage(BaseModel):
     content: str
 
 
+class ToolMessage(BaseModel):
+    role: Literal["tool"]
+    content: str
+    tool_call_id: str
+    name: Optional[str] = None
+
+
 OpenAIMessage = Annotated[
-    Union[SystemMessage, UserMessage, AssistantMessage],
+    Union[SystemMessage, UserMessage, AssistantMessage, ToolMessage],
     Field(discriminator="role"),
 ]
 
 
 class ChatHistory(BaseModel):
     messages: list[OpenAIMessage] = [
-        SystemMessage(content=CHAT_AGENT_SYSTEM_PROMPT)
+        SystemMessage(role="system", content=CHAT_AGENT_SYSTEM_PROMPT)
     ]
 
     def to_messages(self) -> list[dict[str, str]]:
         """Function to output messages in OpenAI format"""
-        return [{"role": m.role, "content": m.content} for m in self.messages]
+        output = []
+        for m in self.messages:
+            if isinstance(m, AssistantMessage):
+                d = {"role": "assistant", "content": m.content or ""}
+                if m.tool_calls:
+                    d["tool_calls"] = m.tool_calls
+                output.append(d)
+            elif isinstance(m, ToolMessage):
+                d = {
+                    "role": "tool",
+                    "content": m.content,
+                    "tool_call_id": m.tool_call_id,
+                }
+                if m.name:
+                    d["name"] = m.name
+                output.append(d)
+            else:
+                output.append({"role": m.role, "content": m.content})
+
+        return output
 
     def append_message(self, message: OpenAIMessage):
         """Append a new message to the chat history"""
@@ -44,7 +71,6 @@ class QueryArgs(BaseModel):
 
     query: str
     n_results: int
-    filters: Optional[dict[str, Any]]
 
 
 class SearchResults(BaseModel):

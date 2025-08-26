@@ -1,5 +1,7 @@
-from chromadb.api.models.Collection import Collection
-from linkedAI.agents import Agent, QueryArgs, SearchResults
+import chromadb
+
+from linkedAI.agents.agent import Agent
+from linkedAI.agents.data_models import QueryArgs, SearchResults
 from linkedAI.config import EMBEDDING_MODEL, OPENAI_API_KEY
 from linkedAI.scraper.data_models import JobCard
 from openai import OpenAI
@@ -11,9 +13,10 @@ class QueryAgent(Agent):
 
     name = "QueryAgent"
 
-    def __init__(self, collection: Collection):
+    def __init__(self, chroma_path: str, collection: str):
         self.client = OpenAI(api_key=OPENAI_API_KEY)
-        self.collection = collection
+        chroma_client = chromadb.PersistentClient(path=chroma_path)
+        self.collection = chroma_client.get_collection(collection)
         self.embedding_model = EMBEDDING_MODEL
         self.log("Successfully initialized QueryAgent")
 
@@ -38,7 +41,6 @@ class QueryAgent(Agent):
             query_embeddings=response.data[0].embedding,
             n_results=query_args.n_results,
             include=["documents", "metadatas"],
-            where=query_args.filters or {},
         )
 
         jobs = []
@@ -50,7 +52,7 @@ class QueryAgent(Agent):
                 )
             )
 
-        return jobs
+        return SearchResults(jobs=jobs)
 
     @staticmethod
     def tool_schema() -> dict[str, Any]:
