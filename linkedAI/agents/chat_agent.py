@@ -6,6 +6,8 @@ from linkedAI.agents.data_models import (
     ChatHistory,
     OpenAIMessage,
     QueryArgs,
+    ResumeMatchArgs,
+    ResumeTweakArgs,
     SearchResults,
     ToolMessage,
     UserMessage,
@@ -20,6 +22,12 @@ from linkedAI.config import (
 )
 from openai import OpenAI
 from typing import Any, Optional
+
+
+class InvalidToolError(Exception):
+    """Exception raised for invalid tool call"""
+
+    pass
 
 
 class ChatAgent(Agent):
@@ -44,7 +52,11 @@ class ChatAgent(Agent):
 
     def _tools(self) -> list[dict[str, Any]]:
         """Returns list of all available tools"""
-        return [self.query_agent.tool_schema()]
+        return [
+            self.query_agent.tool_schema(),
+            self.resume_agent.resume_match_tool_schema(),
+            self.resume_agent.resume_tweak_tool_schema(),
+        ]
 
     def chat(
         self, user_text: str
@@ -89,16 +101,28 @@ class ChatAgent(Agent):
             )
         )
 
-        args = json.loads(tool_calls[0].function.arguments)
-        query_args = QueryArgs(**args)
+        tool_call = tool_calls[0]
+        args = json.loads(tool_call.function.arguments)
+        tool_name = tool_call.function.name
 
-        job_results = self.query_agent.query_vectorstore(query_args)
+        if tool_name == "search_jobs":
+            query_args = QueryArgs(**args)
+            result = self.query_agent.query_vectorstore(query_args)
+        elif tool_name == "match_job_to_resume":
+            resume_match_args = ResumeMatchArgs(**args)
+            result = self.resume_agent.run_resume_match(resume_match_args)
+        elif tool_name == "suggest_resume_tweaks":
+            resume_tweak_args = ResumeTweakArgs(**args)
+            result = self.resume_agent.run_resume_tweak(**resume_tweak_args)
+        else:
+            self.log("OpenAI returned an invalid tool call")
+            raise InvalidToolError()
 
         self.chat_history.append_message(
             ToolMessage(
                 role="tool",
-                content=job_results.model_dump_json(),
-                name="search_jobs",
+                content=result.model_dump_json(),
+                name=tool_name,
                 tool_call_id=tool_calls[0].id,
             )
         )
@@ -116,4 +140,4 @@ class ChatAgent(Agent):
             )
         )
 
-        return reply, job_results
+        return reply, result
