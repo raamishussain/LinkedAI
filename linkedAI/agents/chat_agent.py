@@ -11,7 +11,13 @@ from linkedAI.agents.data_models import (
     UserMessage,
 )
 from linkedAI.agents.query_agent import QueryAgent
-from linkedAI.config import CHROMA_COLLECTION, DEFAULT_MODEL, OPENAI_API_KEY
+from linkedAI.agents.resume_agent import ResumeAgent
+from linkedAI.config import (
+    CHROMA_COLLECTION,
+    DEFAULT_MODEL,
+    OPENAI_API_KEY,
+    RESUME_PATH,
+)
 from openai import OpenAI
 from typing import Any, Optional
 
@@ -24,10 +30,16 @@ class ChatAgent(Agent):
     model = DEFAULT_MODEL
 
     def __init__(self):
-        self.query_agent = QueryAgent(
-            chroma_path=CHROMA_COLLECTION, collection="linkedIn_jobs"
-        )
         self.client = OpenAI(api_key=OPENAI_API_KEY)
+        self.query_agent = QueryAgent(
+            openai_client=self.client,
+            chroma_path=CHROMA_COLLECTION,
+            collection="linkedIn_jobs",
+        )
+        self.resume_agent = ResumeAgent(
+            openai_client=self.client,
+            resume_path=RESUME_PATH,
+        )
         self.chat_history = ChatHistory()
 
     def _tools(self) -> list[dict[str, Any]]:

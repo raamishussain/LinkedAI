@@ -2,7 +2,7 @@ import chromadb
 
 from linkedAI.agents.agent import Agent
 from linkedAI.agents.data_models import QueryArgs, SearchResults
-from linkedAI.config import EMBEDDING_MODEL, OPENAI_API_KEY
+from linkedAI.config import EMBEDDING_MODEL
 from linkedAI.scraper.data_models import JobCard
 from openai import OpenAI
 from typing import Any
@@ -13,8 +13,10 @@ class QueryAgent(Agent):
 
     name = "QueryAgent"
 
-    def __init__(self, chroma_path: str, collection: str):
-        self.client = OpenAI(api_key=OPENAI_API_KEY)
+    def __init__(
+        self, openai_client: OpenAI, chroma_path: str, collection: str
+    ):
+        self.client = openai_client
         chroma_client = chromadb.PersistentClient(path=chroma_path)
         self.collection = chroma_client.get_collection(collection)
         self.embedding_model = EMBEDDING_MODEL

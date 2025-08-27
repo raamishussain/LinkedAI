@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Any, Annotated, Literal, Optional, Union
 
 
+# Data models related to OpenAI message format
 class SystemMessage(BaseModel):
     role: Literal["system"]
     content: str
@@ -66,6 +67,7 @@ class ChatHistory(BaseModel):
         self.messages.append(message)
 
 
+# Data models for QueryAgent's tool call
 class QueryArgs(BaseModel):
     """Arguments for querying the vector database (used in tool call)"""
 
@@ -77,3 +79,27 @@ class SearchResults(BaseModel):
     """Class containing list of jobs from querying the DB"""
 
     jobs: list[JobCard]
+
+
+# Data models for ResumeAgent's tool calls
+class ResumeMatchArgs(BaseModel):
+    """Arguments"""
+
+    jobs: SearchResults
+
+
+class ResumeMatchResult(BaseModel):
+    """"""
+
+    best_match_id: int
+    reasoning: str
+
+
+class ResumeTweakArgs(BaseModel):
+    """Arguments for"""
+
+    job: JobCard
+
+
+class ResumeTweakResult(BaseModel):
+    suggestions: str
