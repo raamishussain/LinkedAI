@@ -35,11 +35,13 @@ class ChatAgent(Agent):
     """User facing agent class which facilitates basic chat and can call to
     other agents when needed"""
 
-    name = "ChatAgent"
-    model = DEFAULT_MODEL
-
     def __init__(self):
+
+        super().__init__("ChatAgent")
+
+        self.model = DEFAULT_MODEL
         self.client = OpenAI(api_key=OPENAI_API_KEY)
+
         self.query_agent = QueryAgent(
             openai_client=self.client,
             chroma_path=CHROMA_COLLECTION,
@@ -49,6 +51,7 @@ class ChatAgent(Agent):
             openai_client=self.client,
             resume_path=Path(RESUME_PATH),
         )
+
         self.chat_history = ChatHistory()
 
     def _tools(self) -> list[dict[str, Any]]:
@@ -92,17 +95,16 @@ class ChatAgent(Agent):
             self.chat_history.append_message(assistant_msg)
             return assistant_msg, None
 
+        tool_call = tool_calls[0]
+
         self.chat_history.append_message(
             AssistantMessage(
                 role="assistant",
                 content=choice.message.content or "",
-                tool_calls=[tc.model_dump() for tc in tool_calls]
-                if tool_calls
-                else None,
+                tool_calls=[tool_call.model_dump()] if tool_calls else None,
             )
         )
 
-        tool_call = tool_calls[0]
         args = json.loads(tool_call.function.arguments)
         tool_name = tool_call.function.name
 
@@ -114,7 +116,7 @@ class ChatAgent(Agent):
             result = self.resume_agent.run_resume_match(resume_match_args)
         elif tool_name == "suggest_resume_tweaks":
             resume_tweak_args = ResumeTweakArgs(**args)
-            result = self.resume_agent.run_resume_tweak(**resume_tweak_args)
+            result = self.resume_agent.run_resume_tweak(resume_tweak_args)
         else:
             self.log("OpenAI returned an invalid tool call")
             raise InvalidToolError()

@@ -49,7 +49,7 @@ class QueryAgent(Agent):
         )
 
         jobs = []
-        for i in range(len(results["documents"])):
+        for i in range(len(results["documents"][0])):
             jobs.append(
                 JobCard(
                     description=results["documents"][0][i],

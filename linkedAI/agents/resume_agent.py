@@ -12,7 +12,6 @@ from linkedAI.config import (
 )
 from openai import OpenAI
 from pathlib import Path
-from pydantic import ValidationError
 from pypdf import PdfReader
 from typing import Any
 
@@ -100,10 +99,10 @@ class ResumeAgent(Agent):
 
         self.log("Sending resume match request to OpenAI...")
         try:
-            response = self.client.chat.completions.create(
+            response = self.client.beta.chat.completions.parse(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                response_format={"type": "json_object"},
+                response_format=ResumeMatchResult,
             )
         except Exception as e:
             self.log(
@@ -112,18 +111,21 @@ class ResumeAgent(Agent):
                 exception=e,
             )
 
-        content = response.choices[0].message.content
-        try:
-            data = ResumeMatchResult.model_validate_json(content)
-        except ValidationError:
-            self.log(
-                "Resume matching response failed validation",
-                level="error",
-                content=content,
-            )
-            data = ResumeMatchResult(best_match_id=0, reasoning="")
+        result = response.choices[0].message.parsed
 
-        return data
+        if result is None:
+            self.log(
+                "OpenAI returned null result for ResumeMatchResult",
+                level="warning",
+            )
+            result = ResumeMatchResult(best_match_id=0, reasoning="")
+
+        self.log(
+            "Resume matching completed successfully",
+            best_match_id=result.best_match_id,
+        )
+
+        return result
 
     def run_resume_tweak(
         self, resume_tweak_args: ResumeTweakArgs
