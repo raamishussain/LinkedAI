@@ -21,6 +21,7 @@ from linkedAI.config import (
     RESUME_PATH,
 )
 from openai import OpenAI
+from pathlib import Path
 from typing import Any, Optional
 
 
@@ -46,7 +47,7 @@ class ChatAgent(Agent):
         )
         self.resume_agent = ResumeAgent(
             openai_client=self.client,
-            resume_path=RESUME_PATH,
+            resume_path=Path(RESUME_PATH),
         )
         self.chat_history = ChatHistory()
 

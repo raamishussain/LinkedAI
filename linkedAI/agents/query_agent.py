@@ -16,7 +16,10 @@ class QueryAgent(Agent):
     def __init__(
         self, openai_client: OpenAI, chroma_path: str, collection: str
     ):
+        super().__init__("QueryAgent")
         self.client = openai_client
+
+        self.log("Initializing QueryAgent...")
         chroma_client = chromadb.PersistentClient(path=chroma_path)
         self.collection = chroma_client.get_collection(collection)
         self.embedding_model = EMBEDDING_MODEL

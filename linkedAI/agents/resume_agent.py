@@ -67,6 +67,7 @@ class ResumeAgent(Agent):
             )
             return ""
 
+    @staticmethod
     def resume_match_tool_schema() -> dict[str, Any]:
         return {
             "type": "function",
@@ -77,6 +78,7 @@ class ResumeAgent(Agent):
             },
         }
 
+    @staticmethod
     def resume_tweak_tool_schema() -> dict[str, Any]:
         return {
             "type": "function",
