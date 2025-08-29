@@ -98,7 +98,7 @@ class ResumeMatchResult(BaseModel):
 class ResumeTweakArgs(BaseModel):
     """Arguments for"""
 
-    job: JobCard
+    job_description: str
 
 
 class ResumeTweakResult(BaseModel):

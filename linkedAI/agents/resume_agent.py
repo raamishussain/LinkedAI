@@ -133,7 +133,7 @@ class ResumeAgent(Agent):
 
         prompt = RESUME_TWEAK_PROMPT.format(
             resume=self.resume,
-            job_description=resume_tweak_args.job.description,
+            job_description=resume_tweak_args.job_description,
         )
 
         self.log("Sending resume tweak request to OpenAI...")

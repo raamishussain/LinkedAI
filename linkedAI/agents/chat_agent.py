@@ -116,7 +116,10 @@ class ChatAgent(Agent):
             session.tool_results["last_tweaks"] = result
             return result
         else:
-            self.log("OpenAI returned an invalid tool call", level="error")
+            self.log(
+                f"OpenAI returned an invalid tool call: {tool_name}",
+                level="error",
+            )
             raise InvalidToolError(f"Unknown tool: {tool_name}")
 
     def _process_all_tool_calls(
@@ -139,7 +142,10 @@ class ChatAgent(Agent):
                     )
                 )
             except Exception as e:
-                self.log(f"Tool execution failed: {e}", level="error")
+                self.log(
+                    f"Tool call failed for {tool_call.function.name}: {e}",
+                    level="error",
+                )
                 self.chat_history.append_message(
                     ToolMessage(
                         role="tool",
@@ -151,49 +157,6 @@ class ChatAgent(Agent):
                 results.append(None)
 
         return results
-
-    def _format_job_results(self, search_results: SearchResults) -> str:
-        """Format job search results for display in chat interface"""
-        if not search_results or not search_results.jobs:
-            return "No jobs found matching your criteria."
-
-        formatted = f"Found {len(search_results.jobs)} relevant jobs:\n\n"
-
-        for i, job in enumerate(search_results.jobs, 1):
-            formatted += f"**{i}. {job.title}** at **{job.company}**\n"
-            formatted += f"{job.location}\n"
-            formatted += f"[Apply Here]({job.link})\n"
-
-            # Truncate description to first 200 chars for readability
-            description = job.description
-            if len(description) > 200:
-                description = description[:200] + "..."
-            formatted += f"{description}\n\n"
-
-        return formatted
-
-    def _format_resume_match_result(self, match_result: Any) -> str:
-        """Format resume match result for display"""
-        if not match_result:
-            return "Unable to analyze resume match."
-
-        formatted = "**Best Match Analysis:**\n\n"
-        formatted += (
-            f"**Best Job Match:** Job #{match_result.best_match_id}\n\n"
-        )
-        formatted += f"**Reasoning:**\n{match_result.reasoning}\n\n"
-
-        return formatted
-
-    def _format_resume_tweaks(self, tweak_result: Any) -> str:
-        """Format resume tweak suggestions for display"""
-        if not tweak_result:
-            return "No resume suggestions available."
-
-        formatted = "**Resume Optimization Suggestions:**\n\n"
-        formatted += f"{tweak_result.suggestions}\n\n"
-
-        return formatted
 
     def chat(self, user_text: str) -> Generator[str, None, None]:
         """Perform chat between user and LLM with streamed responses
@@ -211,8 +174,6 @@ class ChatAgent(Agent):
         self.chat_history.append_message(
             UserMessage(role="user", content=user_text)
         )
-
-        yield "Let me help you with that...\n\n"
 
         while session.iterations < session.max_iterations:
             session.iterations += 1
@@ -251,6 +212,9 @@ class ChatAgent(Agent):
                 if tool_name == "search_jobs":
                     yield "Searching for jobs...\n"
                     try:
+                        self.log(
+                            "Processing search_jobs tool call", level="debug"
+                        )
                         args = json.loads(tool_call.function.arguments)
                         query_args = QueryArgs(**args)
                         result = self.query_agent.query_vectorstore(query_args)
@@ -269,11 +233,11 @@ class ChatAgent(Agent):
                             )
                         )
 
-                        # Stream formatted results
-                        formatted_jobs = self._format_job_results(result)
-                        yield formatted_jobs
-
                     except Exception as e:
+                        self.log(
+                            f"Error in search_jobs tool: {str(e)}",
+                            level="error",
+                        )
                         error_msg = f"Error searching jobs: {str(e)}\n"
                         yield error_msg
                         self.chat_history.append_message(
@@ -288,6 +252,10 @@ class ChatAgent(Agent):
                 elif tool_name == "match_job_to_resume":
                     yield "Analyzing your resume against the jobs...\n"
                     try:
+                        self.log(
+                            f"Processing match_job_to_resume tool call",
+                            level="debug",
+                        )
                         args = json.loads(tool_call.function.arguments)
                         resume_match_args = ResumeMatchArgs(**args)
 
@@ -301,6 +269,10 @@ class ChatAgent(Agent):
                                     session.last_search_results
                                 )
                             else:
+                                self.log(
+                                    "No jobs available for resume matching",
+                                    level="warning",
+                                )
                                 yield "No jobs available for resume matching\n"
                                 continue
 
@@ -319,13 +291,11 @@ class ChatAgent(Agent):
                             )
                         )
 
-                        # Stream formatted results
-                        formatted_match = self._format_resume_match_result(
-                            result
-                        )
-                        yield formatted_match
-
                     except Exception as e:
+                        self.log(
+                            f"Error in match_job_to_resume tool: {str(e)}",
+                            level="error",
+                        )
                         error_msg = f"Error analyzing resume: {str(e)}\n"
                         yield error_msg
                         self.chat_history.append_message(
@@ -340,6 +310,10 @@ class ChatAgent(Agent):
                 elif tool_name == "suggest_resume_tweaks":
                     yield "Generating resume optimization suggestions...\n"
                     try:
+                        self.log(
+                            "Processing suggest_resume_tweaks tool call",
+                            level="debug",
+                        )
                         args = json.loads(tool_call.function.arguments)
                         resume_tweak_args = ResumeTweakArgs(**args)
                         result = self.resume_agent.run_resume_tweak(
@@ -357,11 +331,11 @@ class ChatAgent(Agent):
                             )
                         )
 
-                        # Stream formatted results
-                        formatted_tweaks = self._format_resume_tweaks(result)
-                        yield formatted_tweaks
-
                     except Exception as e:
+                        self.log(
+                            f"Error in suggest_resume_tweaks tool: {str(e)}",
+                            level="error",
+                        )
                         error_msg = f"Error generating suggestions: {str(e)}\n"
                         yield error_msg
                         self.chat_history.append_message(
@@ -375,6 +349,9 @@ class ChatAgent(Agent):
 
         # If we hit max iterations, make final call for summary
         if session.iterations >= session.max_iterations:
+            self.log(
+                f"Reached max iterations ({session.max_iterations}), finalizing response"  # noqa: E501
+            )
             yield "Finalizing response...\n"
             response = self.client.chat.completions.create(
                 model=self.model,

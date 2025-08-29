@@ -213,9 +213,9 @@ class LinkedAIGradioApp:
             gr.Markdown(
                 """
             ### 💡 What I can help you with:
-            
+
             - **🔍 Job Search**: "Find data scientist jobs in San Francisco focusing on machine learning"
-            - **📊 Resume Analysis**: "Which of these jobs best matches my resume?"  
+            - **📊 Resume Analysis**: "Which of these jobs best matches my resume?"
             - **✨ Resume Optimization**: "How can I improve my resume for this role?"
             - **🎯 Follow-up Questions**: Ask detailed questions about specific jobs or requirements
             """
@@ -224,7 +224,6 @@ class LinkedAIGradioApp:
             chatbot = gr.Chatbot(
                 height=500,
                 show_copy_button=True,
-                bubble_full_width=False,
                 render_markdown=True,
                 show_share_button=False,
                 avatar_images=("🧑‍💼", "🤖"),
