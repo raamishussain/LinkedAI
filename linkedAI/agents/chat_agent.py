@@ -253,7 +253,7 @@ class ChatAgent(Agent):
                     yield "Analyzing your resume against the jobs...\n"
                     try:
                         self.log(
-                            f"Processing match_job_to_resume tool call",
+                            "Processing match_job_to_resume tool call",
                             level="debug",
                         )
                         args = json.loads(tool_call.function.arguments)
