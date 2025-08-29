@@ -1,5 +1,7 @@
 # LinkedAI
 
+![logo](linkedAI_logo.png)
+
 AI-powered job search assistant that combines LinkedIn job scraping with intelligent resume optimization and job matching using LLMs.
 
 ## Features
