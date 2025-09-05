@@ -1,0 +1,11 @@
+{
+  "keywords": "data scientist",
+  "location": "United States",
+  "time_since_post": 604800,
+  "remote": true,
+  "max_results": 10,
+  "experience_levels": [
+    "mid_senior"
+  ],
+  "salary": "180k"
+}

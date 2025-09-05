@@ -9,7 +9,6 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-assert OPENAI_API_KEY, "Missing OpenAI API key, make sure it's set in .env"
 
 EMBEDDING_MODEL = "text-embedding-3-small"
 CHROMA_COLLECTION = BASE_DIR.parent / "jobsDB/"

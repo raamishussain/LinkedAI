@@ -17,3 +17,7 @@ dependencies = [
     "python-dotenv",
     "ipykernel",
 ]
+
+[dependency-groups]
+test = ["pytest"]
+lint = ["ruff>=0.8.6"]
