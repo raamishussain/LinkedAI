@@ -40,7 +40,7 @@ class Config(BaseModel):
 
     _f_E: Optional[str] = PrivateAttr(default=None)
     _f_TPR: Optional[str] = PrivateAttr(default=None)
-    _f_WT: Optional[str] = PrivateAttr(default=1)
+    _f_WT: Optional[str] = PrivateAttr(default="1")
     _f_SB2: Optional[str] = PrivateAttr(default=None)
 
     def model_post_init(self, __context):

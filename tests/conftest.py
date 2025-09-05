@@ -5,7 +5,7 @@ import json
 
 from unittest.mock import Mock
 from pathlib import Path
-from linkedAI.scraper.data_models import JobCard, Config, ExperienceLevel
+from linkedAI.scraper.data_models import JobCard
 from linkedAI.agents.data_models import ResumeMatchResult, SearchResults
 
 
@@ -81,14 +81,14 @@ def sample_job_cards():
             company="Tech Corp",
             location="San Francisco, CA",
             description="We are looking for a software engineer...",
-            link="https://linkedin.com/jobs/view/123456",
+            link="https://www.linkedin.com/jobs/view/cool-job-123456",
         ),
         JobCard(
             title="Data Scientist",
             company="Data Inc",
             location="New York, NY",
             description="Join our data science team...",
-            link="https://linkedin.com/jobs/view/789012",
+            link="https://www.linkedin.com/jobs/view/chill-job-789012",
         ),
     ]
 
@@ -97,17 +97,6 @@ def sample_job_cards():
 def sample_search_results(sample_job_cards):
     """Sample SearchResults for testing"""
     return SearchResults(jobs=sample_job_cards)
-
-
-@pytest.fixture
-def sample_config():
-    """Sample Config for testing"""
-    return Config(
-        keywords="python developer",
-        location="San Francisco",
-        max_results=5,
-        experience_levels=[ExperienceLevel.MID_SENIOR],
-    )
 
 
 @pytest.fixture
